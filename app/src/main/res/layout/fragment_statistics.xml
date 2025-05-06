@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Tytuł sekcji -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Statystyki Nastroju"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:paddingBottom="8dp" />
+
+    <!-- Wykres zmian nastroju -->
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/moodChart"
+        android:layout_width="match_parent"
+        android:layout_height="200dp" />
+
+    <!-- Widok kalendarza -->
+    <CalendarView
+        android:id="@+id/moodCalendar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>

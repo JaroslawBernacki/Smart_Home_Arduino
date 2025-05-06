@@ -1,51 +1,163 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".MainActivity">
 
-    <Button
-        android:id="@+id/btnConnect"
+    <!-- RecyclerView do wyświetlania historii nastrojów -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
         android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+    <RadioGroup
+        android:id="@+id/ratingGroup"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Połącz z urządzeniem" />
+        android:orientation="horizontal"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="16dp">
 
-    <Button
-        android:id="@+id/btnImg1"
+        <RadioButton
+            android:id="@+id/rating1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="1" />
+
+        <RadioButton
+            android:id="@+id/rating2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="2" />
+
+        <RadioButton
+            android:id="@+id/rating3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="3" />
+
+        <RadioButton
+            android:id="@+id/rating4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="4" />
+
+        <RadioButton
+            android:id="@+id/rating5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="5" />
+    </RadioGroup>
+
+    <!--
+    <RadioGroup
+        android:id="@+id/moodSelection"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Obraz 1"
-        android:enabled="false" />
-    <Button
-        android:id="@+id/btnImg2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Obraz 2"
-        android:enabled="false" />
-    <Button
-        android:id="@+id/btnImg3"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Obraz 3"
-        android:enabled="false" />
-    <Button
-        android:id="@+id/btnImg4"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Obraz 4"
-        android:enabled="false" />
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <RadioButton
+            android:id="@+id/mood_1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="😞" />
+
+        <RadioButton
+            android:id="@+id/mood_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="😐" />
+
+        <RadioButton
+            android:id="@+id/mood_3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="😊" />
+    </RadioGroup>
+    Wybór nastroju -->
+    <!-- Pole do opisu nastroju -->
     <EditText
-        android:id="@+id/editTextMessage"
+        android:id="@+id/descriptionInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Wpisz notatke"
-        android:inputType="text" />
+        android:hint="Dodaj opis nastroju"
+        android:inputType="textMultiLine" />
+
+    <!-- Przycisk dodawania nastroju -->
     <Button
-        android:id="@+id/btnImg5"
+        android:id="@+id/addMoodButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Przeslij"
-        android:enabled="false" />
+        android:text="Dodaj nastrój" />
 </LinearLayout>
+
+
+
+
+
+
+
+
+
+
+    <!--
+
+    <?xml version="1.0" encoding="utf-8"?>
+    <LinearLayout
+       xmlns:android="http://schemas.android.com/apk/res/android"
+       android:orientation="vertical"
+       android:layout_width="match_parent"
+       android:layout_height="match_parent"
+       android:padding="16dp">
+
+       <Button
+           android:id="@+id/btnConnect"
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+           android:text="Połącz z urządzeniem" />
+
+       <Button
+           android:id="@+id/btnImg1"
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+           android:text="Obraz 1"
+           android:enabled="false" />
+       <Button
+           android:id="@+id/btnImg2"
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+           android:text="Obraz 2"
+           android:enabled="false" />
+       <Button
+           android:id="@+id/btnImg3"
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+           android:text="Obraz 3"
+           android:enabled="false" />
+       <Button
+           android:id="@+id/btnImg4"
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+           android:text="Obraz 4"
+           android:enabled="false" />
+       <EditText
+           android:id="@+id/editTextMessage"
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+           android:hint="Wpisz notatke"
+           android:inputType="text" />
+       <Button
+           android:id="@+id/btnImg5"
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+           android:text="Przeslij"
+           android:enabled="false" />
+    </LinearLayout>
+    -->
