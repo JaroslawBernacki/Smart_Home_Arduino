@@ -13,7 +13,7 @@ import com.example.smarthome.NoteViewModel
 fun CalendarViewScreen(viewModel:NoteViewModel) {
     var selectedDate by remember { mutableStateOf("") }
     Column(modifier = Modifier.padding(16.dp)) {
-        Text("Kalendarz Produktywności", style = MaterialTheme.typography.headlineLarge)
+        Text("Kalendarz Notatek", style = MaterialTheme.typography.headlineLarge)
         AndroidView(
             factory = { context ->
                 CalendarView(context).apply {

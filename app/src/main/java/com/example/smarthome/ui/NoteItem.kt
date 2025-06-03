@@ -13,15 +13,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.smarthome.BluetoothSenderManager
 import com.example.smarthome.NoteEntry
-import com.example.smarthome.BluetoothManager.sendData
+//import com.example.smarthome.BluetoothManager.sendData
+import com.example.smarthome.NoteViewModel
 
 @Composable
-fun MoodItem(noteEntry: NoteEntry, onDelete: (NoteEntry) -> Unit, onEdit: (NoteEntry) -> Unit) {
+fun MoodItem(noteEntry: NoteEntry, onDelete: (NoteEntry) -> Unit, onEdit: (NoteEntry) -> Unit,noteViewModel: NoteViewModel) {
     Card(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Column(modifier = Modifier.padding(8.dp)) {
@@ -53,9 +56,20 @@ fun MoodItem(noteEntry: NoteEntry, onDelete: (NoteEntry) -> Unit, onEdit: (NoteE
                     Text("Delete")
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                Button(onClick = { noteEntry.description?.let { sendData(noteEntry.description) } }) {
+                //Button(onClick = { noteEntry.description?.let { sendData(noteEntry.description) } }) {
+                val context = LocalContext.current
+                Button(onClick = {
+                    noteEntry.description?.let {
+                        android.util.Log.d("BluetoothSender", "Wyslano:$it")
+                        BluetoothSenderManager.sendData(it + "\n")
+                    }
+                }) {
                     Text("Wyślij")
                 }
+
+                //Button(onClick = { noteEntry.description?.let { noteViewModel.sendNoteToESP32(it, context) } }) {
+                //    Text("Wyślij")
+                //}
             }
         }
     }

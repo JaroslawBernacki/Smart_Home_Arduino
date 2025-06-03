@@ -108,7 +108,7 @@ fun MoodEntryScreen(viewModel: NoteViewModel) {
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
 
-            var expanded by remember { mutableStateOf(false) }
+            /*var expanded by remember { mutableStateOf(false) }
             Box {
                 Button(onClick = { expanded = true }) {
                     Text("Produktywność: $filterMood")
@@ -121,7 +121,7 @@ fun MoodEntryScreen(viewModel: NoteViewModel) {
                         })
                     }
                 }
-            }
+            }*/
 
 
             TextField(
@@ -139,7 +139,8 @@ fun MoodEntryScreen(viewModel: NoteViewModel) {
                 MoodItem(
                     noteEntry = moodEntry,
                     onDelete = { viewModel.delete(it) },
-                    onEdit = { startEditing(it) }
+                    onEdit = { startEditing(it) },
+                    noteViewModel = viewModel
                 )
             }
         }

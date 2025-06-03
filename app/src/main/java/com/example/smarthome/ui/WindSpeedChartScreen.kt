@@ -3,7 +3,9 @@ package com.example.smarthome.ui
 import android.graphics.Color
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
@@ -24,13 +26,72 @@ import java.util.Date
 import java.util.Locale
 import kotlin.coroutines.coroutineContext
 
-
 @Composable
+fun WindChartScreen(viewModel: WindViewModel = viewModel()) {
+    val windEntries = viewModel.allEntries.collectAsState(initial = emptyList()).value
+
+    println("Ilość danych: ${windEntries.size}")
+    windEntries.forEach {
+        println("Dane: speed=${it.speed}, time=${it.timestamp}")
+    }
+
+    // Pamiętaj chart i dataset
+    val context = LocalContext.current
+    val chart = remember { LineChart(context) }
+
+
+    // Odśwież dane po każdej zmianie
+    LaunchedEffect(windEntries) {
+        val entries = windEntries.mapIndexed { index, entry ->
+            Entry(index.toFloat(), entry.speed)
+        }
+
+        val dataSet = LineDataSet(entries, "Prędkość wiatru (m/s)").apply {
+            color = Color.BLUE
+            valueTextColor = Color.BLACK
+            setCircleColor(Color.RED)
+            setDrawFilled(true)
+            fillColor = Color.CYAN
+        }
+
+        chart.data = LineData(dataSet)
+        chart.invalidate()  // Bardzo ważne — odświeżenie wykresu
+    }
+
+    AndroidView(
+        factory = { chart.apply {
+            description.text = "Prędkość wiatru w czasie"
+            description.textColor = Color.DKGRAY
+            xAxis.position = XAxis.XAxisPosition.BOTTOM
+            xAxis.setDrawGridLines(false)
+            axisLeft.setDrawGridLines(false)
+            axisRight.isEnabled = false
+            legend.isEnabled = false
+
+            xAxis.valueFormatter = object : ValueFormatter() {
+                override fun getFormattedValue(value: Float): String {
+                    val index = value.toInt()
+                    return if (index >= 0 && index < windEntries.size) {
+                        val date = SimpleDateFormat("HH:mm", Locale.getDefault())
+                            .format(Date(windEntries[index].timestamp))
+                        date
+                    } else ""
+                }
+            }
+        }},
+        modifier = Modifier.fillMaxSize()
+    )
+}
+
+/*@Composable
 fun WindChartScreen(viewModel: WindViewModel = viewModel()) {
     val windEntries = viewModel.allEntries.collectAsState(
         initial = emptyList()
     ).value
-
+    println("Ilość danych: ${windEntries.size}")
+    windEntries.forEach {
+        println("Dane: speed=${it.speed}, time=${it.timestamp}")
+    }
     val entries = windEntries.mapIndexed { index, entry ->
         Entry(index.toFloat(), entry.speed)
     }
@@ -45,7 +106,6 @@ fun WindChartScreen(viewModel: WindViewModel = viewModel()) {
                 axisLeft.setDrawGridLines(false)
                 axisRight.isEnabled = false
                 legend.isEnabled = false
-
                 xAxis.valueFormatter = object : ValueFormatter() {
                     override fun getFormattedValue(value: Float): String {
                         val index = value.toInt()
@@ -72,7 +132,7 @@ fun WindChartScreen(viewModel: WindViewModel = viewModel()) {
         modifier = Modifier.fillMaxSize()
     )
 }
-
+*/
 /*
 @Composable
 fun MoodChartScreen(viewModel: MoodViewModel = viewModel()) {

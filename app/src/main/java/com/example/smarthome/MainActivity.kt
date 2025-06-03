@@ -1,7 +1,5 @@
 package com.example.smarthome
 
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothSocket
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -16,20 +14,163 @@ import androidx.core.app.ActivityCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.smarthome.BluetoothManager.connectToDevice
+//import com.example.smarthome.BluetoothManager.connectNoteDevice
 import com.example.smarthome.ui.CalendarViewScreen
 import com.example.smarthome.ui.WindChartScreen
 import com.example.smarthome.ui.MoodEntryScreen
 import com.example.smarthome.ui.RetryScreen
-import java.io.OutputStream
 import java.util.UUID
 import android.Manifest
-import androidx.compose.ui.platform.LocalContext
 //import com.example.smarthome.BluetoothManager.bluetoothAdapter
-import com.example.smarthome.BluetoothManager.startListening
+//import com.example.smarthome.BluetoothManager.startListening
 
 import com.example.smarthome.ui.CurrentWindSpeedScreen
 
+class MainActivity : ComponentActivity() {
+
+    private val noteViewModel: NoteViewModel by viewModels {
+        NoteViewModelFactory((application as NotesApplication).repository)
+    }
+
+    private val windViewModel: WindViewModel by viewModels {
+        WindViewModelFactory((application as NotesApplication).windRepository)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        val deviceName = "ESP32-anemometer-Slave"
+        val uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+
+        // Sprawdź i poproś o pozwolenie
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.BLUETOOTH_CONNECT),
+                1
+            )
+        }
+        val anemometerConnected = BluetoothReceiverManager.connect(
+            context = this,
+            deviceName = "ESP32-anemometer-Slave",
+            uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+        )
+        if (anemometerConnected) {
+            BluetoothReceiverManager.startListening { windSpeed ->
+                windViewModel.addWindData(windSpeed)
+            }
+        }
+
+        val senderConnected = BluetoothSenderManager.connect(
+            context = this,
+            deviceName = "ESP32-BT-Slave",
+            uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+        )
+
+        if (anemometerConnected) {
+            // Start listening and saving data
+            BluetoothReceiverManager.startListening { windSpeed ->
+                windViewModel.addWindData(windSpeed)
+            }
+        }
+
+        setContent {
+            if (anemometerConnected) {
+                SmarthomeApp(noteViewModel, windViewModel)
+            } else {
+                RetryScreen {
+                    val retrySuccess = BluetoothReceiverManager.connect(
+                        deviceName = deviceName,
+                        uuid = uuid,
+                        context = this
+                    )
+                    BluetoothSenderManager.connect(
+                        deviceName = "ESP32-BT-Slave",
+                        uuid = uuid,
+                        context = this
+                    )
+                    if (retrySuccess) {
+                        BluetoothReceiverManager.startListening { windSpeed ->
+                            windViewModel.addWindData(windSpeed)
+                        }
+                        setContent {
+                            SmarthomeApp(noteViewModel, windViewModel)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    override fun onDestroy() {
+        super.onDestroy()
+        BluetoothReceiverManager.close()
+        BluetoothSenderManager.close()
+    }
+}
+
+/*
+class MainActivity : ComponentActivity() {
+
+    private val noteViewModel: NoteViewModel by viewModels {
+        NoteViewModelFactory((application as NotesApplication).repository)
+    }
+
+    private val windViewModel: WindViewModel by viewModels {
+        WindViewModelFactory((application as NotesApplication).windRepository)
+    }
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (!isGranted) {
+            Log.e("Bluetooth", "Permission not granted")
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        // 1. Request Bluetooth permission if needed
+        if (checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) !=
+            android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            requestPermissionLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT)
+        }
+
+        // 2. Connect to Anemometer ESP32
+        val connectedAnemometer = BluetoothManager.connectAnemometer(
+            deviceName = "ESP32-anemometer-Slave",
+            uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"),
+            context = this
+        )
+
+        // 3. Connect to ESP32 for sending notes
+        val connectedNoteDevice = BluetoothManager.connectNoteDevice(
+            deviceName = "ESP32-slave",
+            uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"),
+            context = this
+        )
+
+        // 4. Start reading wind data if connected
+        if (connectedAnemometer) {
+            BluetoothManager.getAnemometerInputStream()?.let { inputStream ->
+                windViewModel.startListening(inputStream)
+            }
+        }
+
+        // 5. Launch UI
+        setContent {
+            SmarthomeApp(noteViewModel, windViewModel)
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        BluetoothManager.closeConnections()
+    }
+}*/
+/*
 class MainActivity : ComponentActivity() {
 
     private val notesViewModel: NoteViewModel by viewModels {
@@ -41,40 +182,48 @@ class MainActivity : ComponentActivity() {
     }
 
     private val deviceName = "ESP32-anemometer-Slave"
+    //private val deviceName2 = "ESP32-BT-Slave"
     private val uuid: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // ⚠️ Upewnij się, że masz uprawnienia
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.BLUETOOTH_CONNECT),
-                1
-            )
+        val connected = BluetoothManager.initializeConnections(this)
+
+        if (connected) {
+            val inputStream = BluetoothManager.getWindInputStream()
+            inputStream?.let {
+                BluetoothManager.startListening(windViewModel)
+            }
         }
 
-        setContent {
-            val context = LocalContext.current
-            var isConnected by remember { mutableStateOf(false) }
+        /*CoroutineScope(Dispatchers.IO).launch {
+            val windOk = AnemometerBluetooth.connect(applicationContext)
+            val noteOk = NoteSenderBluetooth.connect(applicationContext)
 
-            LaunchedEffect(Unit) {
-                isConnected = BluetoothManager.connectToDevice(
-                    deviceName = deviceName,
-                    uuid = uuid,
-                    context = context
-                )
-
+            if (windOk) {
+                AnemometerBluetooth.startListening(windViewModel)
             }
 
-            if (isConnected) {
-                SmarthomeApp(notesViewModel, windViewModel)
-                startListening(windViewModel)
-            } else {
-                RetryScreen {
+            Log.d("BT", "Połączono: Wiatr=$windOk, Notatki=$noteOk")
+        }*/
+
+            // ⚠️ Upewnij się, że masz uprawnienia
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.BLUETOOTH_CONNECT),
+                    1
+                )
+            }
+
+            setContent {
+                val context = LocalContext.current
+                var isConnected by remember { mutableStateOf(false) }
+
+                LaunchedEffect(Unit) {
                     isConnected = BluetoothManager.connectToDevice(
                         deviceName = deviceName,
                         uuid = uuid,
@@ -82,10 +231,23 @@ class MainActivity : ComponentActivity() {
                     )
 
                 }
+
+                if (isConnected) {
+                    SmarthomeApp(notesViewModel, windViewModel)
+                    startListening(windViewModel)
+                } else {
+                    RetryScreen {
+                        isConnected = BluetoothManager.connectToDevice(
+                            deviceName = deviceName,
+                            uuid = uuid,
+                            context = context
+                        )
+
+                    }
+                }
             }
         }
-    }
-}
+}*/
 /*
 class MainActivity : ComponentActivity() {
 

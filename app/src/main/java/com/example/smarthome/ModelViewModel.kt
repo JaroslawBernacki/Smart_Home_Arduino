@@ -1,12 +1,20 @@
 package com.example.smarthome
-
+import android.app.Activity
+import android.bluetooth.BluetoothAdapter
 import android.content.Context
+import android.content.pm.PackageManager
 import android.widget.Toast
+import androidx.annotation.OptIn
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.*
+import androidx.media3.common.util.Log
+import androidx.media3.common.util.UnstableApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.io.InputStream
+import java.util.UUID
 
 class NoteViewModel(private val repository: NotesRepository) : ViewModel() {
     val allEntries: LiveData<List<NoteEntry>> = repository.allEntries
@@ -30,6 +38,35 @@ class NoteViewModel(private val repository: NotesRepository) : ViewModel() {
         return entry?.let { "Notatka: ${it.description}" } ?: "Brak notatki tego dnia"
         //return entry?.let { "Produktywność: ${it.mood}, Opis: ${it.description}" } ?: "No mood entry for this date"
     }
+
+    @OptIn(UnstableApi::class)
+    fun sendNoteToESP32(noteText: String, context: Context) {
+        val permission = android.Manifest.permission.BLUETOOTH_CONNECT
+        if (ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(context as Activity, arrayOf(permission), 1)
+            return
+        }
+
+        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+        val device = bluetoothAdapter?.bondedDevices?.find { it.name == "ESP32-BT-Slave" }
+
+        if (device != null) {
+            val uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb") // klasyczny SPP UUID
+            Thread {
+                try {
+                    val socket = device.createRfcommSocketToServiceRecord(uuid)
+                    socket.connect()
+                    socket.outputStream.write(noteText.toByteArray())
+                    socket.close()
+                } catch (e: Exception) {
+                    Log.e("Bluetooth", "Błąd wysyłania: ${e.message}")
+                }
+            }.start()
+        } else {
+            Toast.makeText(context, "ESP32-slave nie znaleziony", Toast.LENGTH_SHORT).show()
+        }
+    }
+
 }
 class WindViewModel(private val repository: WindRepository) : ViewModel() {
     val allEntries: Flow<List<WindEntry>> = repository.allWindEntries
@@ -44,23 +81,10 @@ class WindViewModel(private val repository: WindRepository) : ViewModel() {
             repository.insert(wind)
         }
     }
-
-    /*fun startListening(inputStream: InputStream) {
-        viewModelScope.launch {
-            try {
-                val buffer = ByteArray(1024)
-                while (true) {
-                    val bytes = inputStream.read(buffer)
-                    if (bytes > 0) {
-                        val received = String(buffer, 0, bytes).trim()
-                        val speed = received.toFloatOrNull()
-                        speed?.let {
-                            repository.updateWindSpeed(it)
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
+    /*fun startBluetoothListening() {
+        BluetoothManager.startListening { value ->
+            viewModelScope.launch {
+                repository.insert(WindEntry(speed = value, timestamp = System.currentTimeMillis()))
             }
         }
     }*/
